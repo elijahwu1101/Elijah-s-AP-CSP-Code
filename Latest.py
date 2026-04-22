@@ -96,9 +96,20 @@ class PlantFinderApp(App[None]):
 
 class PlantFilters:
     def __init__ (self, watering=None, sunlight=None, temperature = None):
-        self.watering = watering
-        self.sunlight = sunlight
-        self.temperature = temperature
+        if watering == 'none':
+            self.watering = None
+        else:
+            self.watering = watering
+
+        if sunlight == 'none':
+            self.sunlight = None
+        else:
+            self.sunlight = sunlight
+
+        if temperature == 'none':
+            self.temperature = None
+        else:
+            self.temperature = temperature
     
     @property
     def watering(self):
@@ -149,6 +160,8 @@ class PlantFilters:
     
     def quit(self):
         return False
+
+
 
 def welcome_screen():
     print("Welcome to the Automatic Plant Picker")
