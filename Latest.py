@@ -116,6 +116,8 @@ class PlantFinderApp(App[None]):
         if event.button.id == "find_button":
             plant_filters = self.get_plants_filters()
             self.plants_found = plants_finder(self.plants_db, plant_filters)
+
+            # self.plants_found = self.plants_found[self.columns_to_display]
             self.log_widget.write_line("Found " + str(self.plants_found.shape[0]) + " plants!")
             self.refresh_table(self.table, self.plants_found[self.columns_to_display])
 
