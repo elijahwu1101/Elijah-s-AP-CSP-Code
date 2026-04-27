@@ -4,6 +4,7 @@ from textual.containers import Horizontal, Vertical
 from textual.widgets import Footer, Header, OptionList, Label, DataTable, Button, Log
 from textual.widgets.option_list import Option
 
+# UI Elements
 class PlantFinderApp(App[None]):
     def compose(self) -> ComposeResult:
         yield Header()
@@ -38,6 +39,9 @@ class PlantFinderApp(App[None]):
                     id = "TempOptionList"
                 )
 
+                yield Label("More information: ")
+                yield DataTable(id="more-info-table") 
+
                 yield Button('Find', id='find_button')
 
             with Vertical(id='right_panel') as right_panel:
@@ -50,24 +54,47 @@ class PlantFinderApp(App[None]):
 
         yield Footer()
 
+    def create_more_info_data(self, event: DataTable.CellHighlighted):
+        row_index = event.coordinate[0]
+        row_data = self.plants_found.iloc[row_index]
+        new_order = ["common_name"] + [col for col in row_data.index if col != "common_name"]
+        row_data = row_data[new_order]
+
+        # column_labels = self.plants_found.columns
+        new_row_data = row_data.reset_index()
+        new_row_data.columns = ["Field", "Value"]
+
+        return new_row_data
+
+    def on_data_table_cell_highlighted(self, event: DataTable.CellHighlighted) -> None:
+
+        if event.data_table.id == "main-table":            
+            more_info_dt = self.create_more_info_data(event)
+            self.refresh_table(self.more_info_table, more_info_dt)
+
     def on_mount(self) -> None:
         self.water_optionlist = self.query_one('#WaterOptionList', OptionList)
         self.sunlight_optionlist = self.query_one('#SunlightOptionList', OptionList)
         self.temp_optionlist = self.query_one('#TempOptionList', OptionList)
-        
+
+        self.columns_to_display = ["common_name", "temperature_range", "sunlight", "watering"]
         self.water_optionlist.highlighted = self.water_optionlist.get_option_index("none") 
         self.sunlight_optionlist.highlighted = self.sunlight_optionlist.get_option_index("none") 
         self.temp_optionlist.highlighted = self.temp_optionlist.get_option_index("none") 
 
         self.plants_db = load_plants()
         self.table = self.query_one("#main-table", DataTable)
+        self.more_info_table = self.query_one("#more-info-table", DataTable)
         self.log_widget.write_line('App start!')
 
-
     def get_plants_filters(self):
+        watering_selection = None
+        sunlight_selection = None
+        temp_selection = None 
+
         index = self.water_optionlist.highlighted
         if index is not None:
-            watering_selection = self.water_optionlist.get_option_at_index(index).id
+            watering_selection = self.water_optionlist.get_option_at_index(index).id            
 
         index = self.sunlight_optionlist.highlighted
         if index is not None:
@@ -83,16 +110,14 @@ class PlantFinderApp(App[None]):
         dt.clear(columns=True)          # wipe existing data and columns
         dt.add_columns(*df.columns.tolist())
         for row in df.itertuples(index=False):
-            dt.add_row(*row)
+            dt.add_row(*row)  
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "find_button":
             plant_filters = self.get_plants_filters()
-            plants_found = plants_finder(self.plants_db, plant_filters)
-            self.log_widget.write_line("Found " + str(plants_found.shape[0]) + " plants!")
-            self.refresh_table(self.table, plants_found)
-
-
+            self.plants_found = plants_finder(self.plants_db, plant_filters)
+            self.log_widget.write_line("Found " + str(self.plants_found.shape[0]) + " plants!")
+            self.refresh_table(self.table, self.plants_found[self.columns_to_display])
 
 class PlantFilters:
     def __init__ (self, watering=None, sunlight=None, temperature = None):
@@ -160,8 +185,6 @@ class PlantFilters:
     
     def quit(self):
         return False
-
-
 
 def welcome_screen():
     print("Welcome to the Automatic Plant Picker")
