@@ -14,7 +14,7 @@ class PlantFinderApp(App[None]):
                 yield Label("Watering Frequency:")
                 yield OptionList(
                     Option("Very Frequent", id="very frequent"),
-                    Option("Frequent", id="frequence"),
+                    Option("Frequent", id="frequent"),
                     Option("Moderate", id="moderate"),
                     Option("Rare", id="rare"),
                     Option("None", id="none"),
@@ -188,44 +188,8 @@ class PlantFilters:
     def quit(self):
         return False
 
-def welcome_screen():
-    print("Welcome to the Automatic Plant Picker")
-    input("Please press the ENTER key to begin: ")
-
-def option_selector(option_list):
-    option_size = len(option_list)
-    for i, option in enumerate(option_list, start=0):
-        print(f"{i}. {option}")
-    
-    while True:
-        choice = input("\nEnter your choice [0-" + str(option_size-1) + "]: ")
-        if choice in {str(i) for i in range(0, option_size)}:
-            print(f"You selected: {option_list[int(choice)]}")
-            print()
-            break
-        print("Invalid input. Please enter a number between the shown range. ")
-
-    if int(choice) == option_size - 1:
-        return None
-    else:
-        return option_list[int(choice)]
-
-def get_plant_filters():
-    watering_options = ["Very Frequent", "Frequent", "Moderate", "Rare", "It does not matter"]
-    sunlight_options = ["Low", "Medium", "Bright", "It does not matter"]
-    temp_options = ["60-70", "70-80", "80-90", "It does not matter"]
-
-    watering_selection = option_selector(watering_options)
-    sunlight_selection = option_selector(sunlight_options)
-    temp_selection = option_selector(temp_options)
-
-    return PlantFilters(watering_selection, sunlight_selection, temp_selection)
 
 def plants_finder(plants_db, plant_filters):
-    print(plant_filters.watering)
-    print(plant_filters.sunlight)
-    print(plant_filters.temperature)
-
     filtered_plants = plants_db
 
     if plant_filters.watering is not None:
@@ -239,17 +203,15 @@ def plants_finder(plants_db, plant_filters):
 
     return (filtered_plants)
 
-def show_results(plants_df):
-    print()
-    print("There were " + str(plants_df.shape[0]) + " plants that satisfy these criteria!")
-
-    if plants_df is not None:
-        print(plants_df)
     
 def load_plants():
     df = pd.read_csv("Elijah-Plant-Data.csv")
     df["lower_temperature"] = df["lower_temperature"].astype(int)
     df["upper_temperature"] = df["upper_temperature"].astype(int)
     return(df)
+
+
 if __name__ == '__main__':
     PlantFinderApp().run()
+
+
